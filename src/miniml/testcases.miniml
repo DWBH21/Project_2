@@ -1,0 +1,67 @@
+try
+  { 42 }
+ with {
+  | DivisionByZero -> 0
+ };;
+
+ try
+  {3 * 5 + (if 5 < 6 then 10 else 100)}
+ with{
+  | DivisionByZero -> 0
+ };; 
+
+ try
+  {21/6}
+ with{
+  | DivisionByZero -> 0
+ };; 
+
+ try
+  {21/0}
+ with{
+  | DivisionByZero -> 0
+ };; 
+
+ let multiplynby2 = fun f (n : int) : int is if n = 0 then 0 else 2*n;;
+try
+ {multiplynby2 5}
+with{
+ | DivisionByZero -> 0
+};; 
+
+let fact = fun f (n : int) : int is if n = 0 then 1 else n * f (n-1);;
+try
+ {fact 5}
+with{
+ | DivisionByZero -> 0
+};; 
+
+let prime_dividebyn = fun f (n : int) : int is 333/n  ;;
+try
+ {prime_dividebyn 5}
+with{
+ | DivisionByZero -> 0
+};; 
+
+let prime_dividebyn = fun f (n : int) : int is 333/n  ;;
+try
+ {prime_dividebyn 0}
+with{
+ | DivisionByZero -> 100
+};; 
+
+let safe_prime_dividebyn = fun f (n : int) : int is if n = 0 then 0 else 333/n  ;;
+try
+ {safe_prime_dividebyn 0}
+with{
+ | DivisionByZero -> 100
+};; 
+
+let safe_prime_dividebyn = fun f (n : int) : int is if n = 0 then 0 else 333/n  ;;
+
+try
+  { 2 + true}
+ with{
+  | GenericException -1 -> -1  
+ };;
+ 
