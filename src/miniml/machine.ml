@@ -187,12 +187,15 @@ let exec instr frms stck envs =
     
     | IHandle handlers ->      
       let (ex , stck') = pop stck in   (*Pops the topmost mvalue from the stack which might be an exception or a any other mvalue*)
-        let rec match_exceptions handlers = 
+        match ex with 
+        | MExp _ ->
+          let rec match_exceptions handlers = 
           match handlers with 
           | [] -> (frms, stck , envs)     (* If expression does not throw an exception or If Exception not mentioned in with block*)
           | (ex_match , e2) :: rest -> 
           if (string_of_mvalue ex = string_of_mvalue (MExp ex_match) ) then (e2 :: frms , stck' , envs) else match_exceptions rest (* Here we are comparing the string representation of the value as we do not know whether the expression actually throws an exception*)
       in match_exceptions handlers
+      | _ -> (frms, stck , envs)
 
 (** [run frm env] executes the frame [frm] in environment [env]. *)
 let run frm env =
