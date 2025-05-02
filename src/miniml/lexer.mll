@@ -28,8 +28,20 @@ rule token = parse
   | '+'             { PLUS }
   | '-'             { MINUS }
   | '*'             { TIMES }
+  (* Defining new tokens that will be identified by the lexer *)
+  | '/'             { DIVIDE }  
+  | '|'             { PIPE }
+  | '{'             { LBRACE }
+  | '}'             { RBRACE }
+  | "try"           { TRY }
+  | "with"          { WITH }
+  | "DivisionByZero" {DIVISIONBYZERO}
+  | "GenericException" {GENERICEXCEPTION}
+  | "raise" {RAISE} 
+  | "exptn" { TEXP }
   | var             { VAR (Lexing.lexeme lexbuf) }
   | eof             { EOF }
+  
 
 {
 }
