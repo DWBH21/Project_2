@@ -1,0 +1,226 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[english]{babel}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{fvextra}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\geometry{left=2cm,right=2cm,top=2cm,bottom=2cm}
+
+% Listings setup for code blocks
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    breakatwhitespace=true,
+    columns=fullflexible,
+    keepspaces=true
+}
+
+% Header and Footer
+\pagestyle{fancy}
+\fancyhf{}
+\rhead{Anant Maheshwary}
+\lhead{CS1023 - MiniML with Exceptions}
+\cfoot{\thepage}
+
+\begin{document}
+
+\begin{center}
+    {\LARGE \textbf{Extending a Core ML like language with Exception}}\\[1.5cm]
+    {\large Final Project Report}\\
+    {\large CS1023 - Software Development Fundamentals}\\[1.5cm]
+    {\Large \textbf{Anant Maheshwary}}\\
+    CS24BTECH11006\\[1.5cm]
+    May 2025
+\end{center}
+
+\section{MiniML}
+
+An implementation of an eager, statically typed functional language with a compiler and an abstract machine.
+
+The language has the following constructs:
+\begin{itemize}[left=0.5cm]
+    \item Integers with arithmetic operations \texttt{+}, \texttt{-}, and \texttt{*}. (There is no division because the language has no exceptions.)
+    \item Booleans with conditional statements and comparison of integers \texttt{=} and \texttt{<}.
+    \item Recursive functions and function application. The expression
+\end{itemize}
+
+\begin{quote}
+\texttt{fun f (x : t) : s is e}
+\end{quote}
+
+denotes a function of type $t \rightarrow s$ which maps $x$ to $e$. In $e$ the function refers to itself as $f$.
+
+\begin{itemize}[left=0.5cm]
+    \item Toplevel definitions
+\end{itemize}
+
+\begin{quote}
+\texttt{let x = e}
+\end{quote}
+
+There are no local definitions.
+
+\section{Project Aim and Extensions}
+
+The aim of the project is to extend the MiniML language and add the following features:
+
+\begin{enumerate}[left=0.5cm]
+    \item \textbf{Division} \\
+    \textbf{Syntax:} \texttt{e1 / e2}
+    
+    \item \textbf{Define two new exceptions:}
+    \begin{enumerate}[left=0.5cm]
+        \item \texttt{DivisionByZero} exception
+        \item \texttt{GenericException} which takes an integer as an argument
+    \end{enumerate}
+    
+    \item \textbf{Support for raising exceptions} \\
+    \textbf{Syntax:} \texttt{raise GenericException i} \quad or \quad \texttt{raise DivisionByZero}
+    
+    \item \textbf{Adding try-with blocks for handling multiple exceptions.} \\
+    \textbf{Syntax:}
+    \begin{quote}
+    \texttt{try \{ expression \} with \{ }\\
+    \hspace*{1em}\texttt{| Exception1 -> expression1 }\\
+    \hspace*{1em}\texttt{| Exception2 -> expression2 }\\
+    \texttt{\}}
+    \end{quote}
+\end{enumerate}
+
+In this project, \texttt{GenericException} is thrown in case of type errors, for example, arithmetic operations on invalid types or calling functions with arguments of invalid type, etc.
+
+\section{Design and Implementation}
+\subsection{Working of the Original MiniML Language}
+
+\textbf{Compilation Workflow:}
+
+\begin{enumerate}[left=0.5cm]
+    \item \textbf{Lexical Analysis (\texttt{lexer.mll}):}
+    \begin{itemize}[left=0.5cm]
+        \item \textbf{Role:} The \texttt{lexer.mll} file defines the rules for the lexer (also known as a scanner or tokenizer).
+        \item \textbf{Process:} It takes the raw input program (a string of characters) as its input.
+        \item \textbf{Output:} It breaks down the input into a stream of tokens. Each token represents a basic building block of the language, such as keywords (\texttt{let}, \texttt{fun}, \texttt{if}), identifiers (variable names), literals (integers, booleans), operators (\texttt{+}, \texttt{-}, \texttt{*}, \texttt{/}), punctuation (\texttt{(}, \texttt{)}, \texttt{\{}, \texttt{\}}), and special symbols (\texttt{->}, \texttt{=}).
+        \item \textbf{Example:} For the input \texttt{let x = 5 + 2;;}, the lexer would produce a sequence of tokens like: \texttt{LET}, \texttt{VAR "x"}, \texttt{EQUAL}, \texttt{INT 5}, \texttt{PLUS}, \texttt{INT 2}, \texttt{SEMISEMI}.
+    \end{itemize}
+    
+    \item \textbf{Syntactic Analysis (\texttt{parser.mly}):}
+    \begin{itemize}[left=0.5cm]
+        \item \textbf{Role:} The \texttt{parser.mly} file defines the grammar of the miniML language.
+        \item \textbf{Process:} It takes the stream of tokens produced by the lexer as its input.
+        \item \textbf{Output:} It attempts to structure these tokens according to the grammar rules. If the token sequence is syntactically correct, the parser produces an Abstract Syntax Tree (AST). The AST is a hierarchical representation of the program's structure, making it easier for the compiler to understand the meaning of the code. If the token sequence violates the grammar, the parser reports a syntax error.
+        \item \textbf{Example:} For the token sequence from the previous step, the parser would build an AST that represents a \texttt{Def} (definition) where the variable \texttt{"x"} is bound to a \texttt{Plus} expression with operands \texttt{Int 5} and \texttt{Int 2}.
+    \end{itemize}
+    
+    \item \textbf{Abstract Syntax Tree Definition (\texttt{syntax.ml}):}
+    \begin{itemize}[left=0.5cm]
+        \item \textbf{Role:} The \texttt{syntax.ml} file defines the data structures that represent the abstract syntax of the miniML language.
+        \item \textbf{Content:} It typically includes OCaml type definitions for:
+        \begin{itemize}[left=0.5cm]
+            \item \texttt{name}: Representing variable names (usually strings).
+            \item \texttt{ty}: Representing the types in the language (e.g., \texttt{TInt}, \texttt{TBool}, \texttt{TArrow} for function types, \texttt{TExp} for exceptions).
+            \item \texttt{expr}: Representing the different kinds of expressions in the language (e.g., \texttt{Var}, \texttt{Int}, \texttt{Bool}, \texttt{Plus}, \texttt{Minus}, \texttt{If}, \texttt{Fun}, \texttt{Apply}, \texttt{Let}, \texttt{TryWith}, \texttt{Raise}). Each constructor in the \texttt{expr} type corresponds to a syntactic construct in the language and holds the necessary sub-expressions and information.
+            \item \texttt{command}: Representing top-level commands that can be executed (e.g., evaluating an expression, defining a variable).
+        \end{itemize}
+        \item \textbf{Importance:} This file acts as the blueprint for the AST that the parser creates and the compiler consumes.
+    \end{itemize}
+    
+    \item \textbf{Compilation to Bytecode (\texttt{compile.ml}):}
+    \begin{itemize}[left=0.5cm]
+        \item \textbf{Role:} The \texttt{compile.ml} file defines the compiler, which translates the AST into a sequence of instructions that can be executed by the miniML virtual machine.
+        \item \textbf{Process:} It takes the AST (produced by the parser based on the \texttt{syntax.ml} definitions) as input.
+        \item \textbf{Output:} It generates a list of low-level instructions (bytecode) that are specific to your miniML virtual machine. These instructions represent operations like pushing values onto a stack, performing arithmetic, comparing values, branching, creating closures, and handling exceptions.
+        \item \textbf{Example:} A \texttt{Plus (Int 5, Int 2)} AST node might be compiled into a sequence of instructions that push the integer 5, push the integer 2, and then perform an integer addition.
+    \end{itemize}
+\end{enumerate}
+
+\textbf{Execution Workflow:}
+
+\begin{itemize}[left=0.5cm]
+    \item \textbf{Virtual Machine Execution (\texttt{machine.ml}):}
+    \begin{itemize}[left=0.5cm]
+        \item \textbf{Role:} The \texttt{machine.ml} file defines the miniML virtual machine, which is responsible for executing the bytecode generated by the compiler.
+        \item \textbf{Components:} It typically includes:
+        \begin{itemize}[left=0.5cm]
+            \item \textbf{State:} Data structures to represent the machine's state during execution, such as a stack (for storing intermediate values), an environment (mapping variables to their values), and potentially a program counter (to track the current instruction).
+            \item \textbf{Instruction Set:} Definitions for the bytecode instructions that the compiler generates.
+            \item \textbf{Execution Cycle:} A loop that fetches, decodes, and executes the bytecode instructions one by one, updating the machine's state.
+        \end{itemize}
+        \item \textbf{Process:} It takes the list of bytecode instructions as input.
+        \item \textbf{Output:} It executes the program according to the instructions, potentially producing a final value or triggering side effects (if your language supports them). It also handles runtime errors, such as division by zero or unbound variables (if not caught during type checking or if your machine handles them). For exception handling, it would manage the stack and environment to find appropriate exception handlers when a \texttt{Raise} instruction is executed.
+    \end{itemize}
+\end{itemize}
+
+\subsection{Extension to this Project}
+
+Below are the main additions made to each file for extending MiniML with exception handling and related features:
+
+\begin{enumerate}[left=0.5cm]
+    \item \textbf{Lexer (\texttt{lexer.mll}):}  
+    Added new tokens: \texttt{DIVIDE}, \texttt{PIPE}, \texttt{LBRACE}, \texttt{RBRACE}, \texttt{TRY}, \texttt{WITH}, \texttt{DIVISIONBYZERO}, \texttt{GENERICEXCEPTION}, \texttt{RAISE}, and \texttt{TEXP}.
+    
+    \item \textbf{Parser (\texttt{parser.mly}):} Defined new parsing rules:
+    \begin{itemize}[left=0.2cm]
+        \item \textbf{For division:}
+\begin{lstlisting}
+| e1 = expr DIVIDE e2 = expr
+    { Divide(e1, e2) }
+\end{lstlisting}
+
+        \item \textbf{For raising exceptions:}
+\begin{lstlisting}
+| RAISE e = exception_type
+    { Raise(e) }
+\end{lstlisting}
+
+        \item \textbf{For handling exceptions (try-with blocks):}
+\begin{lstlisting}
+| TRY LBRACE try_e = expr RBRACE WITH LBRACE handlers = exception_handlers RBRACE
+    { TryWith(try_e, handlers) }
+\end{lstlisting}
+        Here, \texttt{exception\_handlers} is a non-empty list of tuples of an exception type and the expression to be evaluated if the exception is caught.
+
+        \item \textbf{Exception types:}
+\begin{lstlisting}
+| DIVISIONBYZERO
+    { DivisionByZero }
+| GENERICEXCEPTION e_int = INT
+    { GenericException(e_int) }
+| GENERICEXCEPTION MINUS e_int = INT
+    { GenericException(-e_int) }
+\end{lstlisting}
+    \end{itemize}
+
+    \item \textbf{Syntax (\texttt{syntax.ml}):}  
+    Defined the corresponding constructors:
+\begin{lstlisting}
+| Raise of exception_type         (* To raise an exception *)
+| TryWith of expr * (exception_type * expr) list
+| Exception of exception_type     (* Exception *)
+\end{lstlisting}
+    Added new type:
+\begin{lstlisting}
+ty = ... | TExp
+\end{lstlisting}
+    \item \textbf{Changes to \texttt{machine.ml} and \texttt{compile.ml}:}\\
+    Added a new machine value:\\
+    \textbf{\texttt{MExp}}\\
+    Added new instructions:
+    \begin{itemize}[left=0.2cm]
+        \item \texttt{IDiv} \\
+        Performs integer division. Pushes the result of the division onto the stack, or an \texttt{MExp} value if the denominator is zero.
+        \item \texttt{IExp} \\
+        Pushes an \texttt{MExp} (exception) value onto the stack.
+        \item \texttt{IRaise} \\
+        Clears the environments, stack, and frames of the machine, then pushes an \texttt{MExp} onto the stack to indicate an exception has been raised.
+        \item \texttt{IHandle} \\
+        Checks if the expression on the top of the stack is an exception; if so, adds the corresponding list of instructions to the frames for exception handling.
+    \end{itemize}
+    \end{enumerate}
+\end{document}
