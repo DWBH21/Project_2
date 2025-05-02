@@ -2,7 +2,7 @@
   open Parser
 }
 
-let var = ['a'-'z' 'A'-'Z']+
+let var = ['a'-'z' 'A'-'Z'] ['a'-'z' 'A'-'Z' '0'-'9' '_']*    (* to allow variable names to contain digits and underscore. But a variable name have to start with letters*)
 
 rule token = parse
     [' ' '\t' '\r'] { token lexbuf }
